@@ -1,12 +1,16 @@
 package de.fh;
 
 import de.fh.agent.PacmanAgent;
+import de.fh.pacman.Pacman;
 import de.fh.pacman.PacmanPercept;
 import de.fh.pacman.enums.PacmanAction;
 import de.fh.pacman.enums.PacmanActionEffect;
 
 import de.fh.agent.Agent;
 import de.fh.pacman.enums.PacmanTileType;
+
+import java.util.Enumeration;
+import java.util.Random;
 
 
 /**
@@ -25,7 +29,7 @@ public class MyAgent extends PacmanAgent {
 	}
 
     public static void main(String[] args) {
-        MyAgent agent = new MyAgent("");
+        MyAgent agent = new MyAgent("Packman");
 		Agent.start(agent, "127.0.0.1", 5000);
     }
 
@@ -156,10 +160,29 @@ public class MyAgent extends PacmanAgent {
          * PacmanAction.WAIT
          */
 
-
+        int direction = (new Random().nextInt() + Integer.MAX_VALUE) % 4;
+        System.out.println(direction);
         if(actionEffect == PacmanActionEffect.GAME_INITIALIZED) {
             //Erster Aufruf
             nextAction = PacmanAction.GO_EAST;
+        }
+        switch(direction) {
+            case 0: {
+                nextAction = PacmanAction.GO_SOUTH;
+                break;
+            }
+            case 1: {
+                nextAction = PacmanAction.GO_WEST;
+                break;
+            }
+            case 2: {
+                nextAction = PacmanAction.GO_NORTH;
+                break;
+            }
+            case 3: {
+                nextAction = PacmanAction.GO_EAST;
+                break;
+            }
         }
 
         return nextAction;
