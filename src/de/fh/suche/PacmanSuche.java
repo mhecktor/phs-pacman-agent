@@ -188,7 +188,7 @@ public class PacmanSuche extends Suche {
      */
 	private void KnotenEinfuegen_BS(PacmanKnoten expansionsKandidat) {
 
-		//TODO Breitensuche
+		//DONE Breitensuche
         openList.add(expansionsKandidat);
         //Implementiert openList.add(Index,exp) mit dem richtigen Index gemäß Suchstrategie
 	}
@@ -201,7 +201,7 @@ public class PacmanSuche extends Suche {
      */
 	private void KnotenEinfuegen_Dijkstra(PacmanKnoten expansionsKandidat) {
 
-        //TODO Dijkstra
+        //DONE Dijkstra
         openList.add(expansionsKandidat);
         openList.sort((x,y) -> Float.compare(x.bewertung.getSchaetzwert(), y.bewertung.getSchaetzwert()));
         //Implementiert openList.add(Index,exp) mit dem richtigen Index gemäß Suchstrategie
@@ -215,8 +215,10 @@ public class PacmanSuche extends Suche {
      */
 	private void KnotenEinfuegen_BFS(PacmanKnoten expansionsKandidat) {
 
-        //TODO Bestensuche
+        //DONE Bestensuche
         //Implementiert openList.add(Index,exp) mit dem richtigen Index gemäß Suchstrategie
+        openList.add(expansionsKandidat);
+        openList.sort((x,y) -> Float.compare(x.bewertung.getSchaetzwert(), y.bewertung.getSchaetzwert()));
 	}
 
     /**
@@ -270,9 +272,10 @@ public class PacmanSuche extends Suche {
         //TODO Dijkstra
         //Setzt die richtigen Attributwerte im Objekt 'bewertung'
 
+        bewertung.setPfadKosten(expansionsKandidat.getBewertung().getPfadKosten() + 1);
         expansionsKandidat.setBewertung(bewertung);
     }
-
+    
     /**
      * Konkrete Implentierung des Bewertens eines Knoten in
      * der Bestensuche-Suche
@@ -285,6 +288,23 @@ public class PacmanSuche extends Suche {
 		//TODO Bestensuche
         //Setzt die richtigen Attributwerte im Objekt 'bewertung'
 
+        if(expansionsKandidat.getVorgaenger().getVorgaenger() == null) {
+            int dots = 0;
+            for (int i = 0; i < expansionsKandidat.getView().length; i++) {
+                for (int j = 0; j < expansionsKandidat.getView()[0].length; j++) {
+                    if (expansionsKandidat.getView()[i][j] == PacmanTileType.DOT) {
+                        dots++;
+                    }
+                }
+            }
+            bewertung.setAnzahlDots(dots);
+        } else {
+            int dots = expansionsKandidat.getVorgaenger().getBewertung().getAnzahlDots();
+            if(expansionsKandidat.getVorgaenger().getView()[expansionsKandidat.getPos().getX()][expansionsKandidat.getPos().getY()] == PacmanTileType.DOT) {
+                dots--;
+            }
+            bewertung.setAnzahlDots(dots);
+        }
         expansionsKandidat.setBewertung(bewertung);
 	}
 
