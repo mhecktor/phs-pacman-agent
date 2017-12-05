@@ -102,7 +102,7 @@ public class PacmanSuche extends Suche {
     	Vector2 pos = vorgaenger.berechneNeuePosition(vorgaenger.getPos(), bewegungsRichtung);
     	if (vorgaenger.getView()[pos.getX()][pos.getY()] == PacmanTileType.WALL)
     		return;
-    	
+
         //Erzeuge Nachfolgerknoten nach gewünschter Bewegungsrichtung
         PacmanKnoten nachfolger = new PacmanKnoten(vorgaenger, bewegungsRichtung);
 
@@ -275,7 +275,7 @@ public class PacmanSuche extends Suche {
         bewertung.setPfadKosten(expansionsKandidat.getBewertung().getPfadKosten() + 1);
         expansionsKandidat.setBewertung(bewertung);
     }
-    
+
     /**
      * Konkrete Implentierung des Bewertens eines Knoten in
      * der Bestensuche-Suche
@@ -291,7 +291,7 @@ public class PacmanSuche extends Suche {
         if(expansionsKandidat.getVorgaenger().getVorgaenger() == null) {
             int dots = 0;
             for (int i = 0; i < expansionsKandidat.getView().length; i++) {
-                for (int j = 0; j < expansionsKandidat.getView()[0].length; j++) {
+                for (int j = 0; j < expansionsKandidat.getView()[i].length; j++) {
                     if (expansionsKandidat.getView()[i][j] == PacmanTileType.DOT) {
                         dots++;
                     }
