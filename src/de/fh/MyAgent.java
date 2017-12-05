@@ -1,17 +1,17 @@
 package de.fh;
 
 import de.fh.agent.PacmanAgent;
-import de.fh.pacman.Pacman;
 import de.fh.pacman.PacmanPercept;
 import de.fh.pacman.enums.PacmanAction;
 import de.fh.pacman.enums.PacmanActionEffect;
 
 import de.fh.agent.Agent;
 import de.fh.pacman.enums.PacmanTileType;
+import de.fh.suche.PacmanKnoten;
+import de.fh.suche.PacmanSuche;
+import de.fh.suche.Suche;
 
-import java.util.Enumeration;
-import java.util.Random;
-
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * DIESE KLASSE VERÄNDERN SIE BITTE NUR AN DEN GEKENNZEICHNETEN STELLEN
@@ -21,20 +21,23 @@ public class MyAgent extends PacmanAgent {
 
     private PacmanPercept percept;
     private PacmanActionEffect actionEffect;
+    private PacmanSuche suche;
+    private PacmanKnoten loesungsKonten;
+    private LinkedBlockingQueue<PacmanAction> pacmanActionList;
     private PacmanTileType[][] view;
+    private boolean worldChanged = true;
 
     public MyAgent(String name) {
 		super(name);
-		// TODO Auto-generated constructor stub
 	}
 
     public static void main(String[] args) {
-        MyAgent agent = new MyAgent("Packman");
+        MyAgent agent = new MyAgent("");
 		Agent.start(agent, "127.0.0.1", 5000);
     }
 
     /**
-     * In dieser Methode kann das Wissen über die Welt (der State, der Zustand)
+     * In dieser Methode kann das Wissen über die Welt (der State,  der Zustand)
      * entsprechend der aktuellen Wahrnehmungen anpasst, und die "interne Welt",
      * die Wissensbasis, des Agenten kontinuierlich ausgebaut werden.
      *
@@ -53,9 +56,10 @@ public class MyAgent extends PacmanAgent {
          */
         this.percept = (PacmanPercept) percept;
 
-        /**
-         * Aktuelle Reaktion des Server auf die letzte übermittelte Action.
-         *
+
+        /*
+         Aktuelle Reaktion des Server auf die letzte übermittelte Action.
+
          // Alle möglichen Serverrückmeldungen:
          if(actionEffect == PacmanActionEffect.GAME_INITIALIZED) {
          //Erster Aufruf
@@ -82,7 +86,6 @@ public class MyAgent extends PacmanAgent {
 
         this.actionEffect = actionEffect;
 
-
         /*
         percept.getView() enthält die aktuelle Felderbelegung je nach Level/Sichtweite in einem Array
 
@@ -91,7 +94,7 @@ public class MyAgent extends PacmanAgent {
 
         Für den Pacman sind folgende Felderbelegungen möglich
 
-		PacmanTileType.WALL
+	    PacmanTileType.WALL
         PacmanTileType.DOT
         PacmanTileType.EMPTY
         PacmanTileType.PACMAN
@@ -101,10 +104,6 @@ public class MyAgent extends PacmanAgent {
         PacmanTileType.GHOST_PASSIVE
         PacmanTileType.GHOST_RANDOM
 		*/
-
-
-
-
 
         //Beispiel:
         view = this.percept.getView();
@@ -122,16 +121,12 @@ public class MyAgent extends PacmanAgent {
         }
         System.out.println("-------------------------------");
 
-
-        /**
-         * TODO [1]: Erweitern Sie diese updateState-Methode gemäß der Aufgabenstellung
-         */
-
-
 	}
 
     /**
-     * Unsere Action-Methode (s. Russel / Norwig) wählt die nächste(n) sinnvolle(n) Aktion(en), gemäß Regeln.
+     * Unsere Action-Methode setzt sich (s. Russel / Norwig) hier aus zwei Teilen zusammen:
+     * ChooseAction wählt die nächste(n) sinnvolle(n) Aktion(en), gemäß Regeln.
+     * DoAct lässt den Agenten nach Lösungsweg laufen bzw. handeln.
      * @param
      * @return Die nächste Pacman-Action die vom Server ausgeführt werden soll
      */
@@ -160,31 +155,100 @@ public class MyAgent extends PacmanAgent {
          * PacmanAction.WAIT
          */
 
-        int direction = (new Random().nextInt() + Integer.MAX_VALUE) % 4;
-        System.out.println(direction);
-        if(actionEffect == PacmanActionEffect.GAME_INITIALIZED) {
-            //Erster Aufruf
-            nextAction = PacmanAction.GO_EAST;
+         /*Die Suche muss nicht nach jedem Zug ausgeführt werden, solange sich die Welt nicht ändert,
+         * wie z.B. ein Ghost der gefährlich wird -> worldChanged = true!
+         *
+         */
+        if (worldChanged) {
+
+            /*
+             * TODO [0] Gewünschte Suchstrategie einsetzen
+             * Suche.TIEFENSUCHE
+             * Suche.BREITENSUCHE
+             * Suche.BESTENSUCHE
+             * Suche.ASTERN
+             * Suche.DIJKSTRA
+             *
+             */
+
+
+            suche = new PacmanSuche(this.percept, defineGoal(view), Suche.BESTENSUCHE);
+
+            //Hier startet die gewaehlte Suche.
+            loesungsKonten = suche.start();
+
+
+            if (loesungsKonten != null){
+
+
+
+                //Für jeder Knoten wird der Weg, in Form von PacmanActions, von der Wurzel aus mitgeführt.
+                this.pacmanActionList = new LinkedBlockingQueue<PacmanAction>();
+                this.pacmanActionList.addAll(loesungsKonten.getPacmanActionList());
+                //Die Suche soll im nächsten Zug nicht erneut durchgeführt werden,
+                //sofern nicht notwendig
+                worldChanged = false;
+            } else
+                System.out.println("Kein Lösungsweg gefunden");
+
+
         }
-        switch(direction) {
-            case 0: {
-                nextAction = PacmanAction.GO_SOUTH;
-                break;
-            }
-            case 1: {
-                nextAction = PacmanAction.GO_WEST;
-                break;
-            }
-            case 2: {
-                nextAction = PacmanAction.GO_NORTH;
-                break;
-            }
-            case 3: {
-                nextAction = PacmanAction.GO_EAST;
-                break;
-            }
+
+
+
+        /**
+         * DoAct:
+         * Hier lässt man den Pacman nach Lösungsweg laufen bzw. fressen.
+         * Man greift (poll) auf die Pacmanactions (als Queue realisiert) zu,
+         * die den Weg von der Wurzel zum Zielknoten (wird intern mitgeführt) beschreiben.
+         **/
+
+        if (!this.pacmanActionList.isEmpty()) {
+            //Gebe die nächste Pacman-Action zurück
+            nextAction = this.pacmanActionList.poll();
+        } else {
+            //Für eine reine Offlinesuche ist das Ziel erreicht, Spiel endet.
+            nextAction = PacmanAction.QUIT_GAME;
         }
+
+        /*
+        Mögliche PacmanActions sind möglich:
+        PacmanAction.GO_EAST
+        PacmanAction.GO_NORTH
+        PacmanAction.GO_SOUTH
+        PacmanAction.GO_WEST
+        PacmanAction.QUIT_GAME
+        PacmanAction.WAIT
+      */
+
 
         return nextAction;
 	}
+
+	/**
+     * Die Ausgangswelt (view) wird variiert zu einem Zielzustand.
+     * In unserem Fall ist der Zielzustand eine leer gefressene Welt (Könnte auch anders sein!)
+     *
+     * @param view Die Ausgangswelt (view)
+     * @return Der Zielzustand in Form eines Knotens
+     */
+    public PacmanKnoten defineGoal(PacmanTileType[][] view){
+    	PacmanTileType[][] zielview = new PacmanTileType[view.length][view[0].length];
+
+        // Kopiere die Ausgangswelt und lösche alles ausser die Wände
+        for (int spalte = 0; spalte < view.length; spalte++) {
+            for (int zeile = 0; zeile < view[0].length; zeile++) {
+
+                if (view[spalte][zeile] != PacmanTileType.WALL)
+                    zielview[spalte][zeile] = PacmanTileType.EMPTY;
+                else
+                    zielview[spalte][zeile] = view[spalte][zeile];
+            }
+        }
+
+        return new PacmanKnoten(zielview, null);
+    }
+
+
+
 }
