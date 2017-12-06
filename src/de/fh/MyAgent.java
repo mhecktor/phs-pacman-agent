@@ -172,7 +172,7 @@ public class MyAgent extends PacmanAgent {
              */
 
 
-            suche = new PacmanSuche(this.percept, defineGoal(view), Suche.BESTENSUCHE);
+            suche = new PacmanSuche(this.percept, defineGoal(view), Suche.ASTERN);
 
             //Hier startet die gewaehlte Suche.
             loesungsKonten = suche.start();

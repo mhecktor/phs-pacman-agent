@@ -231,6 +231,11 @@ public class PacmanSuche extends Suche {
 
 		//TODO AStern
         //Implementiert openList.add(Index,exp) mit dem richtigen Index gemäß Suchstrategie
+		int j = 0;
+		for (j = 0; j < openList.size(); j++)
+			if (openList.get(j).getBewertung().getSchaetzwert() > expansionsKandidat.getBewertung().getSchaetzwert())
+				break;
+		openList.add(j, expansionsKandidat);
 	}
 
 
@@ -319,6 +324,17 @@ public class PacmanSuche extends Suche {
 		PacmanBewertung bewertung = expansionsKandidat.getBewertung();
 		//TODO AStern
         //Setzt die richtigen Attributwerte im Objekt 'bewertung'
+
+		bewertung.setPfadKosten(expansionsKandidat.getVorgaenger() == null ? 0
+				: expansionsKandidat.getVorgaenger().getBewertung().getPfadKosten() + 1);
+
+		int dots = 0;
+		for (int y = 0; y < expansionsKandidat.getView().length; y++)
+			for (int x = 0; x < expansionsKandidat.getView()[0].length; x++)
+				if (expansionsKandidat.getView()[y][x] == PacmanTileType.DOT)
+					dots++;
+
+		bewertung.setAnzahlDots(dots);
 
 
         expansionsKandidat.setBewertung(bewertung);
